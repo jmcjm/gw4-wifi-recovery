@@ -1,5 +1,4 @@
 *.img
-ap-password.txt
 sepolicy.stock
 sepolicy.patched
 tools/

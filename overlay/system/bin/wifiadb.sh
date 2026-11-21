@@ -3,8 +3,10 @@
 # on the screen through gw4ui (it replaces the Samsung recovery UI; the menu
 # entry "Samsung recovery" brings the original one back).
 # 1. Home network: /cache/wifi-adb/wpa.conf (wpa_supplicant format), if present.
-# 2. Fallback: own WPA2 access point, config from /cache/wifi-adb/hostapd.conf
-#    if present, otherwise the built-in /vendor/etc/wifi/wifiadb-ap.conf.
+# 2. Fallback: own WPA2 access point GW4-RECOVERY-XXXX. The suffix (four hex
+#    digits, like the SM-R870-XXXX of Wireless Download) and the password are
+#    generated on the first use and kept in /cache/wifi-adb, so a laptop can
+#    remember the network. /cache/wifi-adb/hostapd.conf overrides everything.
 # ADB listens on TCP 5555 in both cases.
 # The script never exits after setup: init kills the whole process group of a
 # finished oneshot service, which would take the supplicant or hostapd with it.
@@ -87,8 +89,46 @@ if [ -f /tmp/wifiadb/wpa.conf ]; then
   sleep 1
 fi
 
-AP=/vendor/etc/wifi/wifiadb-ap.conf
-[ -f /tmp/wifiadb/hostapd.conf ] && AP=/tmp/wifiadb/hostapd.conf
+# Prints N random characters from an alphabet without look-alikes (0/o, 1/l/i).
+rand_chars() {
+  od -An -tu1 -N"$1" /dev/urandom | tr -s ' ' '\n' | sed '/^$/d' | while read -r b; do
+    printf '%s' "$(echo abcdefghjkmnpqrstuvwxyz23456789 | cut -c$((b % 31 + 1)))"
+  done
+}
+
+# Access point name suffix and password: read from /cache, or generate and
+# store them there. Without a writable /cache they live only for this boot.
+ap_identity() {
+  if mount -t ext4 /dev/block/by-name/cache /tmp/wcache; then
+    mkdir -p /tmp/wcache/wifi-adb && chmod 700 /tmp/wcache/wifi-adb
+    if [ ! -s /tmp/wcache/wifi-adb/ap-id ] || [ ! -s /tmp/wcache/wifi-adb/ap-pass ]; then
+      (umask 077
+       od -An -tx1 -N2 /dev/urandom | tr -d ' \n' | tr a-f A-F > /tmp/wcache/wifi-adb/ap-id
+       echo "$(rand_chars 5)-$(rand_chars 5)" > /tmp/wcache/wifi-adb/ap-pass)
+      echo "wifiadb: new access point identity stored in /cache"
+    fi
+    AP_ID=$(cat /tmp/wcache/wifi-adb/ap-id)
+    AP_PASS=$(cat /tmp/wcache/wifi-adb/ap-pass)
+    sync
+    umount /tmp/wcache
+  fi
+  if [ -z "$AP_ID" ] || [ -z "$AP_PASS" ]; then
+    AP_ID=$(od -An -tx1 -N2 /dev/urandom | tr -d ' \n' | tr a-f A-F)
+    AP_PASS="$(rand_chars 5)-$(rand_chars 5)"
+    echo "wifiadb: /cache not writable, temporary access point identity"
+  fi
+}
+
+if [ -f /tmp/wifiadb/hostapd.conf ]; then
+  AP=/tmp/wifiadb/hostapd.conf
+else
+  ap_identity
+  AP=/tmp/wifiadb/ap.conf
+  (umask 077
+   cat /vendor/etc/wifi/wifiadb-ap.conf
+   echo "ssid=GW4-RECOVERY-$AP_ID"
+   echo "wpa_passphrase=$AP_PASS") > "$AP"
+fi
 AP_SSID=$(sed -n 's/^ssid=//p' "$AP")
 AP_PASS=$(sed -n 's/^wpa_passphrase=//p' "$AP")
 status "Starting access point..."
@@ -97,5 +137,5 @@ sleep 2
 ip addr add 192.168.49.1/24 dev wlan0
 dhcpd /vendor/etc/wifi/dhcpd.conf
 start_adb
-status "AP: $AP_SSID" "Pass: $AP_PASS" "ADB ready:" "192.168.49.1:5555"
+status "Access point:" "$AP_SSID" "Pass: $AP_PASS" "ADB 192.168.49.1:5555"
 stay

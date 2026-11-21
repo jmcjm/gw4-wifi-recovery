@@ -36,3 +36,15 @@ There is no DRM device on this watch; `gw4ui` draws into `/dev/graphics/fb0` and
 ## Stopping the Android framework drops wireless ADB
 
 Wireless debugging is handled by `system_server`. Running `stop` over a wireless ADB session cuts the session before any following `start` runs, and the watch stays without a UI until it is rebooted. Tests that need the framework stopped must run detached (`setsid`/`nohup`) and restart it themselves.
+
+## Wireless Download picks a new SSID every session
+
+The `SM-R870-XXXX` name of Wireless Download is random per session (`SM-R870-93BE` and `SM-R870-8463` on the same evening, from `/cache/recovery/last_log*`), not derived from the MAC address, serial number or `ro.boot.em.did`. The fallback access point of this recovery uses the same four-hex-digit format but keeps it in `/cache`, so the network stays the same between boots.
+
+## /proc/net/wireless triggers a kernel warning
+
+Reading `/proc/net/wireless` in recovery logs a kernel warning from `wireless_dev_seq_start`, and the `dhd` driver reports zeros there anyway. `gw4ui` reads only the RSSI that `wifiadb.sh` writes.
+
+## mDNS finds the watch from the desktop
+
+`adb mdns services` on a machine in the same LAN lists the watch as `_adb-tls-connect._tcp` with its current address and port, so the changing wireless debugging port does not have to be read off the screen.

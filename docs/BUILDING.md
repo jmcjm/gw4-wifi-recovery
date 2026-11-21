@@ -38,7 +38,7 @@ The script pushes the policy to the watch, applies `sepolicy/rules.te` with `/da
 NDK=/path/to/ndk ./build.sh recovery-stock.img sepolicy.patched recovery-wifiadb.img
 ```
 
-The script builds `gw4ui`, fills in the access point password (from `ap-password.txt`, created with a random password on the first run), adds the overlay to the ramdisk, repacks the image and checks that the kernel, `dtb` and `recovery_dtbo` are unchanged.
+The script builds `gw4ui`, adds the overlay to the ramdisk, repacks the image and checks that the kernel, `dtb` and `recovery_dtbo` are unchanged.
 
 ## 5. Home network config
 

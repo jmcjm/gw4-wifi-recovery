@@ -8,9 +8,6 @@
 # Environment:
 #   MAGISKBOOT   x86_64 magiskboot (default: tools/magiskboot, see --tools)
 #   NDK          Android NDK root, for building gw4ui
-#   AP_PASSWORD_FILE  file with the WPA2 password of the fallback access point
-#                     (default: ap-password.txt; created with a random
-#                     16-character password when missing)
 #
 #   ./build.sh --tools <Magisk APK>  extracts the x86_64 magiskboot into tools/
 #
@@ -20,7 +17,6 @@ set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 MAGISKBOOT=${MAGISKBOOT:-$here/tools/magiskboot}
-AP_PASSWORD_FILE=${AP_PASSWORD_FILE:-$here/ap-password.txt}
 
 die() { echo "build.sh: $*" >&2; exit 1; }
 
@@ -66,15 +62,6 @@ strip=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
 "$cc" -O2 -Wall -Wextra -static -o "$work/gw4ui.full" "$here/ui/gw4ui.c"
 "$strip" -o "$work/gw4ui" "$work/gw4ui.full"
 
-# Access point config with the password filled in.
-if [[ ! -f $AP_PASSWORD_FILE ]]; then
-  (umask 077; tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16 > "$AP_PASSWORD_FILE")
-  echo "new access point password in $AP_PASSWORD_FILE"
-fi
-pass=$(cat "$AP_PASSWORD_FILE")
-[[ ${#pass} -ge 8 ]] || die "access point password must have at least 8 characters"
-sed "s/@AP_PASSWORD@/$pass/" "$here/overlay/vendor/etc/wifi/wifiadb-ap.conf.in" > "$work/wifiadb-ap.conf"
-
 unpack "$stock"
 cd "$work"
 "$MAGISKBOOT" cpio ramdisk.raw "extract prop.default prop.default" >/dev/null 2>&1
@@ -87,7 +74,7 @@ sed -i -e 's/^ro.secure=1/ro.secure=0/' \
   "add 0644 system/etc/init/wifiadb.rc $here/overlay/system/etc/init/wifiadb.rc" \
   "add 0755 system/bin/wifiadb.sh $here/overlay/system/bin/wifiadb.sh" \
   "add 0755 system/bin/gw4ui gw4ui" \
-  "add 0600 vendor/etc/wifi/wifiadb-ap.conf wifiadb-ap.conf" \
+  "add 0644 vendor/etc/wifi/wifiadb-ap.conf $here/overlay/vendor/etc/wifi/wifiadb-ap.conf" \
   "add 0644 prop.default prop.default" \
   "add 0644 sepolicy $policy" >/dev/null 2>&1
 

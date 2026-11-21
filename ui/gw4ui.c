@@ -3,8 +3,8 @@
  * Galaxy Watch 4. Runs instead of the Samsung recovery UI and draws directly
  * through DRM dumb buffers (fbdev as a fallback), without libdrm.
  *
- * Status text comes from /tmp/wifiadb.status (written by wifiadb.sh); the
- * signal level is read live from /proc/net/wireless.
+ * Status text comes from /tmp/wifiadb.status and the signal level from
+ * /tmp/wifiadb.rssi, both written by wifiadb.sh.
  *
  * Buttons: KEY_POWER (upper key) confirms, KEY_APPSELECT (lower key) or a tap
  * moves the selection. Other keys, such as the wrist motion sensor reporting
@@ -283,35 +283,19 @@ static void text_center(int y, const char *s, uint32_t rgb)
 static const char *menu[] = {"Reboot system", "Samsung recovery", "Power off"};
 #define MENU_N 3
 
+/* RSSI written by wifiadb.sh from mf_cli signal_poll. /proc/net/wireless is
+ * not used: the dhd driver reports zeros there, and reading it triggers a
+ * kernel warning on every redraw. */
 static int read_signal(void)
 {
-    /* wifiadb.sh writes the RSSI from mf_cli; the dhd driver leaves
-     * /proc/net/wireless at zero, so that file is only a fallback. */
+    int v = 0;
     FILE *r = fopen("/tmp/wifiadb.rssi", "r");
     if (r) {
-        int v = 0;
-        if (fscanf(r, "%d", &v) == 1 && v < 0) {
-            fclose(r);
-            return v;
-        }
+        if (fscanf(r, "%d", &v) != 1 || v >= 0)
+            v = 0;
         fclose(r);
     }
-    FILE *f = fopen("/proc/net/wireless", "r");
-    if (!f)
-        return 0;
-    char line[256];
-    int level = 0;
-    while (fgets(line, sizeof(line), f)) {
-        char *p = strstr(line, "wlan0:");
-        if (!p)
-            continue;
-        int status;
-        float link, lvl;
-        if (sscanf(p + 6, "%x %f %f", &status, &link, &lvl) == 3)
-            level = (int)lvl;
-    }
-    fclose(f);
-    return level;
+    return v;
 }
 
 static void draw(int sel)

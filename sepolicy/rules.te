@@ -1,0 +1,14 @@
+# magiskpolicy statements applied to the recovery sepolicy, one per line.
+# init starts wifiadb.sh (through /system/bin/sh) and gw4ui in the recovery domain.
+allow init shell_exec file { read open execute getattr map }
+allow init recovery process { transition rlimitinh siginh noatsecure }
+allow recovery shell_exec file { entrypoint read open execute getattr map }
+allow init system_file file { read open execute getattr map }
+allow recovery system_file file { entrypoint read open execute getattr map }
+# setenforce 0 is not possible on this kernel, so the domains involved are
+# made permissive instead: the script and gw4ui (recovery), adbd and the root
+# shell it spawns (su), plus the plain shell domain.
+permissive recovery
+permissive adbd
+permissive su
+permissive shell

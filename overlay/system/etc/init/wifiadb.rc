@@ -1,0 +1,19 @@
+# Wi-Fi ADB for the normal recovery mode. The script exits on its own when
+# recovery runs in Wireless Download mode, so wirelessd keeps wlan0 and the
+# screen.
+on boot
+    start wifiadb
+
+service wifiadb /system/bin/sh /system/bin/wifiadb.sh
+    disabled
+    oneshot
+    user root
+    group root
+    seclabel u:r:recovery:s0
+
+service wifiadb_ui /system/bin/gw4ui
+    disabled
+    oneshot
+    user root
+    group root
+    seclabel u:r:recovery:s0

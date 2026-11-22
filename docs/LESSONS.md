@@ -48,3 +48,15 @@ Reading `/proc/net/wireless` in recovery logs a kernel warning from `wireless_de
 ## mDNS finds the watch from the desktop
 
 `adb mdns services` on a machine in the same LAN lists the watch as `_adb-tls-connect._tcp` with its current address and port, so the changing wireless debugging port does not have to be read off the screen.
+
+## adb exec-in truncates large writes
+
+`adb exec-in 'dd of=/dev/block/by-name/X'` loses the end of the stream: adbd ends the process once the host closes its side, before the remaining buffered data is read (20 MB tests arrived as 8–17 MB). The data that does arrive is correct. toybox `zcat` also refuses exec-in input as a TTY. For partition images use `adb push -z zstd` (this adbd supports zstd, lz4 and brotli) into `/tmp` in chunks of 128 MB, write each chunk with `dd seek=`, and check every chunk's hash on the partition. On 2.4 GHz Wi-Fi this ran at about 5–7 MB/s, against about 2 MB/s for exec-in.
+
+## The bootloader log is in /proc/last_kmsg
+
+`/proc/last_kmsg`, read from this recovery, also contains the bootloader's log of the previous boot attempts: `SecureBoot` and rollback checks, `[UFDT]` device tree overlay messages and `avb_slot_verify` output. That is where a failed normal boot (blue Odin screen) explains itself.
+
+## Recovery boots with its own device tree
+
+The recovery image carries its own `dtb` and `recovery_dtbo`, so it boots even when `boot` holds a device tree the bootloader rejects. What does stop it is a Samsung-signed image of an older binary revision in a partition the bootloader checks (`CHECK FAIL … DEVICE: 2, BINARY: 1`): then the reboot menu's Recovery entry lands in Wireless Download, and the way back is flashing stock signed images with NetOdin or Brokkr.

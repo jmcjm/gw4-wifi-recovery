@@ -97,3 +97,7 @@ Not in the repository: images (they contain Samsung binaries) and `tools/`. A bu
 - If the recovery partition is broken, Wireless Download is gone too, because it lives in the same partition. Keep the stock recovery image and write a new image only from a system that boots, or check it from inside a working recovery before rebooting.
 - SELinux stays `Enforcing`: the kernel does not allow `setenforce 0`, so the domains involved are made permissive in the policy instead.
 - A full stock reflash through NetOdin restores the stock recovery.
+
+## License
+
+GPL-2.0-or-later, see `LICENSE.md` (terms, third-party material, no warranty) and `COPYING` (full license text). The stock Samsung recovery that a built image contains is not covered by it, so built images must not be shared.

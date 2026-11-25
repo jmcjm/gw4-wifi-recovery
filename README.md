@@ -94,6 +94,7 @@ Not in the repository: images (they contain Samsung binaries) and `tools/`. A bu
 ## Limitations
 
 - Only tested on `R870XXS2JZG3`. Another firmware needs its own stock recovery and a freshly patched policy.
+- SM-R860 (40 mm): an image for `R860XXS2JZG3` builds from the same sources without changes, from the `recovery.img.lz4` of the `R860XXS2JZG3` AP, with the policy patched by `magiskpolicy` on any rooted watch. It has not been flashed or booted yet. `gw4ui` takes the screen size from the framebuffer, so the 396x396 panel needs no change.
 - If the recovery partition is broken, Wireless Download is gone too, because it lives in the same partition. Keep the stock recovery image and write a new image only from a system that boots, or check it from inside a working recovery before rebooting.
 - SELinux stays `Enforcing`: the kernel does not allow `setenforce 0`, so the domains involved are made permissive in the policy instead.
 - A full stock reflash through NetOdin restores the stock recovery.

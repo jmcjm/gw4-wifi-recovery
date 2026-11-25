@@ -21,6 +21,8 @@ adb shell "su -c 'rm /data/local/tmp/recovery-stock.img'"
 sha256sum recovery-stock.img
 ```
 
+Without root, take it from the firmware instead: `tar -xOf AP_..._WATCH_OS16.tar.md5 recovery.img.lz4 | lz4 -d > recovery-stock.img` gives the recovery image of that firmware. Only use the AP of the firmware the watch runs.
+
 Keep this file. It is the only way back to the stock recovery, and with it to an untouched Wireless Download, without a full firmware flash. For `R870XXS2JZG3` the expected hash is in `docs/STATUS.md`.
 
 ## 3. Policy
@@ -30,7 +32,7 @@ Keep this file. It is the only way back to the stock recovery, and with it to an
 sepolicy/patch-sepolicy.sh <adb serial> sepolicy.stock sepolicy.patched
 ```
 
-The script pushes the policy to the watch, applies `sepolicy/rules.te` with `/data/adb/magisk/magiskpolicy`, pulls the result back and removes the temporary files.
+The watch only runs `magiskpolicy` on the file, so any watch with Magisk will do, also another model. The script pushes the policy to the watch, applies `sepolicy/rules.te` with `/data/adb/magisk/magiskpolicy`, pulls the result back and removes the temporary files.
 
 ## 4. Image
 

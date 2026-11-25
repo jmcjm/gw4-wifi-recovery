@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Builds the Wi-Fi ADB recovery image from a stock SM-R870 recovery image.
+# Builds the Wi-Fi ADB recovery image from a stock SM-R870 or SM-R860
+# recovery image.
 #
 # usage:
 #   ./build.sh --extract-sepolicy <stock recovery.img> <output sepolicy>

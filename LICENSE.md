@@ -16,7 +16,7 @@ This covers everything in this repository unless a section below says otherwise.
 
 The build combines this project with files that are not part of it and are not covered by this license:
 
-- **The stock recovery image** of the watch (kernel, ramdisk, `recovery` binary, `wirelessd`, Wi-Fi firmware, SELinux policy and everything else in it) belongs to Samsung Electronics and its suppliers. The repository holds none of it. You dump it from your own watch, and a built image contains it, so a built image must not be redistributed.
+- **The stock recovery image** of the watch (kernel, ramdisk, `recovery` binary, `wirelessd`, Wi-Fi firmware, SELinux policy and everything else in it) belongs to Samsung Electronics and its suppliers. The repository holds none of it. You dump it from your own watch or take it from the firmware package for it, and a built image contains it, so a built image must not be redistributed.
 - **`magiskboot` and `magiskpolicy`** come from [Magisk](https://github.com/topjohnwu/Magisk) under the GNU General Public License, version 3. They run as separate programs during the build and are not linked into anything here. `magiskboot` is extracted from a Magisk APK you provide, and `magiskpolicy` runs from the Magisk installed on the watch. Neither is stored here.
 - **The Android NDK** is used under its own license terms to compile `gw4ui`.
 
